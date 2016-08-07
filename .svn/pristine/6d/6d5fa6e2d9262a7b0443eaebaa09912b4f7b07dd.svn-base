@@ -1,0 +1,215 @@
+unit frm_dm;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, DB, ADODB, DCPcrypt2, DCPmd5;
+type
+  Tdm = class(TForm)
+    EPG_DB: TADOConnection;
+    DDL: TADOQuery;
+    dml: TADOQuery;
+    EPG_Access_DB: TADOConnection;
+    AccDDL: TADOQuery;
+    Accdml: TADOQuery;
+    EPG_DB_2: TADOConnection;
+    DDL2: TADOQuery;
+    dml2: TADOQuery;
+    dmlTanggal: TADOQuery;
+    DDLTanggal: TADOQuery;
+    DDLIDTable: TADOQuery;
+    DDLDateTime: TADOQuery;
+    DDLPush: TADOQuery;
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  dm: Tdm;
+  strSQL, strIMGChoice :String;
+
+  procedure RecSetPush(strSQL : String);
+  procedure RecSet(strSQL : String);
+  procedure RecExc(strSQL : String);
+  procedure RecSetAcc(strSQL : String);
+  procedure RecExcAcc(strSQL : String);
+  procedure JulianToSolar(var Y,M,D:Word);
+  procedure RecExc2(strSQL : String);
+  procedure RecSet2(strSQL : String);
+  Function fncMD5(text:string):string;
+
+  procedure RecSetIDTable(strSQL : String);
+  procedure RecSetDateTime(strSQL : String);
+
+
+implementation
+
+
+{$R *.dfm}
+
+procedure RecSetPush(strSQL : String);
+begin
+ dm.DDLPush.Close;
+ dm.DDLPush.SQL.Clear;
+ dm.DDLPush.SQL.Add(strSQL);
+ dm.DDLPush.Open;
+end;
+
+procedure RecSet(strSQL : String);
+begin
+ dm.DDL.Close;
+ dm.DDL.SQL.Clear;
+ dm.DDL.SQL.Add(strSQL);
+ dm.DDL.Open;
+end;
+
+procedure RecExc(strSQL : String);
+begin
+ dm.dml.Close;
+ dm.dml.SQL.Clear;
+ dm.dml.SQL.Add(strSQL);
+ dm.dml.ExecSQL;
+end;
+
+procedure RecSetAcc(strSQL : String);
+begin
+ dm.AccDDL.Close;
+ dm.AccDDL.SQL.Clear;
+ dm.AccDDL.SQL.Add(strSQL);
+ dm.AccDDL.Open;
+end;
+
+procedure RecExcAcc(strSQL : String);
+begin
+ dm.Accdml.Close;
+ dm.Accdml.SQL.Clear;
+ dm.Accdml.SQL.Add(strSQL);
+ dm.Accdml.ExecSQL;
+end;
+
+procedure RecSet2(strSQL : String);
+begin
+ dm.DDL2.Close;
+ dm.DDL2.SQL.Clear;
+ dm.DDL2.SQL.Add(strSQL);
+ dm.DDL2.Open;
+end;
+
+procedure RecExc2(strSQL : String);
+begin
+ dm.dml2.Close;
+ dm.dml2.SQL.Clear;
+ dm.dml2.SQL.Add(strSQL);
+ dm.dml2.ExecSQL;
+end;
+
+procedure JulianToSolar(var Y,M,D:Word);
+const
+  SolarDays : array[1..12] of Word = (31,31,31,31,31,31,30,30,30,30,30,29) ;
+  JulianDays : array[1..12] of Word = (31,28,31,30,31,30,31,31,30,31,30,31) ;
+var
+  R: Real;
+  Kabiseh,Kably: Boolean;
+  DaysSum,Days: Word;
+  SolarYear,SolarMonth,SolarDay: Word;
+  I: Integer;
+begin
+DaysSum := 0 ;
+if Y=0 then
+Y:=2000
+else if Y<1900 then
+Y:=1900+Y;
+R:=Abs(y-1996)/4;
+SolarDay:=0;
+SolarMonth:=0;
+Days:=0;
+if(R=Trunc(R))then
+Kabiseh:=True else
+Kabiseh:=False;
+R:=Abs(y-1-1996)/4;
+if(R=Trunc(R))then
+Kably:=True else
+Kably:=False;
+if(m>1)then
+for I := m downto 2 do
+DaysSum:=DaysSum+JulianDays[I-1];
+DaysSum:=DaysSum+d;
+if(kabiseh)and(DaysSum>=59)then
+Inc(DaysSum);
+if(Kabiseh and(DaysSum<80))
+or(not Kabiseh and (DaysSum<79))
+or(not Kabiseh and Kably and (DaysSum<80))then
+SolarYear:=y-622 else
+SolarYear:=y-621;
+if Kabiseh and (DaysSum>79) then days:=DaysSum-79;
+if Kabiseh and (DaysSum<80) then Days:=DaysSum+286 ;
+if not Kabiseh and not Kably and (DaysSum>79) then Days:=DaysSum-79;
+if not Kabiseh and not Kably and (DaysSum<80) then Days:=DaysSum+286;
+if not Kabiseh and Kably and (DaysSum>79) then Days:=DaysSum-79;
+if not Kabiseh and Kably and (DaysSum<80) then Days:=DaysSum+287;
+DaysSum:=Days;
+if(daysSum<=186)then
+begin
+ SolarMonth:=(DaysSum div 31)+1;
+ SolarDay:=DaysSum mod 31;
+ If SolarDay=0 then SolarDay:=31;
+ If SolarDay=31 then SolarMonth:=SolarMonth-1;
+end;
+if DaysSum > 186 then
+begin
+ DaysSum:=DaysSum-186;
+ if DaysSum mod 30 = 0 then
+ SolarMonth:=(DaysSum div 30)+6 else
+ SolarMonth:=(DaysSum div 30)+7;
+ SolarDay:=DaysSum mod 30;
+ If SolarDay=0 then SolarDay:=30;
+end;
+Y:=SolarYear;
+D:=SolarDay;
+M:=SolarMonth;
+end;
+
+Function fncMD5(text:string):string;
+var
+  Hash: TDCP_md5;
+  Digest: array[0..15] of byte;
+  Source: String;
+  i: integer;
+  s: string;
+ begin
+  //Edit2.Clear;
+  Source := text;
+  Hash:= TDCP_md5.Create(Hash);
+  Hash.Init;
+  Hash.UpdateStr(Source);
+  Hash.Final(Digest);
+  s:= '';
+  for i:= 0 to 15 do
+    s:= s + IntToHex(Digest[i],2);
+  //Edit2.Text:= s;
+  fncMD5:= s;
+end;
+
+procedure RecSetIDTable(strSQL : String);
+ begin
+   dm.DDLIDTable.Close;
+   dm.DDLIDTable.SQL.Clear;
+   dm.DDLIDTable.SQL.Add(strSQL);
+   dm.DDLIDTable.Open;
+ end;
+
+procedure RecSetDateTime(strSQL : String);
+  begin
+    dm.DDLDateTime.Close;
+    dm.DDLDateTime.SQL.Clear;
+    dm.DDLDateTime.SQL.Add(strSQL);
+    dm.DDLDateTime.Open;
+  end;
+
+end.
+
+
+

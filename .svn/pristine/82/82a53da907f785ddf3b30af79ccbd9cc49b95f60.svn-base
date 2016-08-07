@@ -1,0 +1,35 @@
+; -- Example1.iss --
+; Demonstrates copying 3 files and creating an icon.
+
+; SEE THE DOCUMENTATION FOR DETAILS ON CREATING .ISS SCRIPT FILES!
+
+#define MyAppName "Excel to NDS Scheduller Converter"
+#define MyAppVersion "6"
+#define MyAppPublisher "Nugraha Saputra"
+#define MyAppURL "http://www.anekajual.com"
+#define MyAppExeName "EPG.exe"
+
+[Setup]
+AppId={{136AB635-DA8F-460D-98A0-ED51566E29C4}
+AppName={#MyAppName}
+AppVersion={#MyAppVersion}
+AppPublisher={#MyAppPublisher}
+AppPublisherURL={#MyAppURL}
+AppSupportURL={#MyAppURL}
+AppUpdatesURL={#MyAppURL}
+DefaultDirName={pf}\{#MyAppName}
+DefaultGroupName={#MyAppName}
+UninstallDisplayIcon={app}\EPG.exe
+Compression=lzma2
+SolidCompression=yes
+;OutputDir=userdocs:Inno Setup Examples Output
+
+[Files]
+Source: "EPG.exe"; DestDir: "{app}"
+;Source: "MyProg.chm"; DestDir: "{app}"
+;Source: "Readme.txt"; DestDir: "{app}"; Flags: isreadme
+
+[Icons]
+Name: "{group}\Excel to NDS Scheduller Converter"; Filename: "{app}\EPG.exe"
+Name: "{group}\{cm:UninstallProgram,Excel to NDS Scheduller Converter}"; Filename: "{uninstallexe}"
+Name: "{commondesktop}\Excel to NDS Scheduller Converter"; Filename: "{app}\EPG.exe"

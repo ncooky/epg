@@ -1,0 +1,524 @@
+unit frm_InsertCA;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, ExtCtrls, NxScrollControl, NxCustomGridControl, NxCustomGrid,
+  NxGrid, NxColumns, NxColumnClasses, Menus, StdCtrls, jpeg;
+
+type
+  TfrmCA = class(TForm)
+    Shape2: TShape;
+    ppmCAPkg: TPopupMenu;
+    AddRow1: TMenuItem;
+    Save1: TMenuItem;
+    AddNew1: TMenuItem;
+    Exit1: TMenuItem;
+    Delete1: TMenuItem;
+    ScrollBox1: TScrollBox;
+    ScrollBox2: TScrollBox;
+    ngCA: TNextGrid;
+    NxTextColumn1: TNxTextColumn;
+    NxComboBoxColumn1: TNxComboBoxColumn;
+    NxComboBoxColumn2: TNxComboBoxColumn;
+    NxTextColumn4: TNxTextColumn;
+    NxTextColumn5: TNxTextColumn;
+    Label1: TLabel;
+    Update: TMainMenu;
+    File1: TMenuItem;
+    AddNew2: TMenuItem;
+    AddRow2: TMenuItem;
+    Update1: TMenuItem;
+    Delete2: TMenuItem;
+    Exit2: TMenuItem;
+    Panel1: TPanel;
+    cbChannel: TComboBox;
+    Button1: TButton;
+    Label2: TLabel;
+    Panel2: TPanel;
+    Image1: TImage;
+    NxTextColumn2: TNxTextColumn;
+    Panel3: TPanel;
+    txtSearch: TEdit;
+    lblSearch: TLabel;
+    Button2: TButton;
+    procedure FormShow(Sender: TObject);
+    procedure ngCAMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure AddRow1Click(Sender: TObject);
+    procedure Save1Click(Sender: TObject);
+    procedure AddNew1Click(Sender: TObject);
+    procedure Exit1Click(Sender: TObject);
+    procedure cbChannelSelect(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
+    procedure ngCASelectCell(Sender: TObject; ACol, ARow: Integer);
+    procedure Delete1Click(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure Exit2Click(Sender: TObject);
+    procedure Delete2Click(Sender: TObject);
+    procedure Update1Click(Sender: TObject);
+    procedure AddRow2Click(Sender: TObject);
+    procedure AddNew2Click(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
+    procedure txtSearchKeyPress(Sender: TObject; var Key: Char);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  frmCA: TfrmCA;
+  x,y : integer;
+
+implementation
+
+uses frm_dm, frm_User, frm_Login;
+
+{$R *.dfm}
+
+function SetCueBanner(const Edit: TEdit;
+const Placeholder: String): Boolean;
+const
+  EM_SETCUEBANNER = $1501;
+var
+  UniStr: WideString;
+begin
+  UniStr := Placeholder;
+  SendMessage(Edit.Handle, EM_SETCUEBANNER, WParam(True),LParam(UniStr));
+  Result := GetLastError() = ERROR_SUCCESS;
+end;
+
+function fncangka():string;
+var
+ strAngka : integer;
+begin
+ strSQL := 'SELECT CAID FROM M_CA_PACKAGE ORDER BY CAID ';
+ RecSet(strSQL);
+
+ if dm.DDL.Eof then
+  begin
+   strAngka := 1;
+  end
+ else
+  begin
+   dm.ddl.Last;
+   strAngka := dm.DDL.FieldValues['CAID'] + 1;
+  end;
+ fncangka:=IntToStr(strAngka); 
+end;
+
+function Replace(Dest, SubStr, Str: string): string;
+var
+  Position: Integer;
+begin
+ Position:=Pos(SubStr, Dest);
+  while Position<>0 do
+  begin
+   Delete(Dest, Position, Length(SubStr));
+   Insert(Str, Dest, Position);
+   Result:=Dest;
+   Position:=Pos(SubStr, Dest);
+  end;
+ Result:=Dest;
+end;
+
+procedure prcSearch(ccaid:string);
+var
+strSQL : String;
+i, ii : integer;
+begin
+ frmCA.ngCA.ClearRows;
+ strSQL := 'SELECT COUNT(CAID) as jumlahbaris from m_ca_package ';
+ if frmCA.txtsearch.Text <> '' then
+ begin
+ strSQL := strSQL + 'where capackage = ''' + ccaid + '''';
+ end;
+ RecSet(strSQL);
+ ii:=dm.DDL.FieldValues['jumlahbaris'];
+ frmCA.ngCA.AddRow(ii);
+ frmCA.ngCA.BeginUpdate;
+// strSQL := ' SELECT CACHANNEL, capackage from m_ca_package  ';
+ strSQL := 'SELECT CACHANNEL, capackage, ccadescription from m_ca_package a JOIN m_caserviceid b on A.CAPACKAGE = B.CCAID ';
+ if frmCA.txtsearch.Text <> '' then
+  begin
+   strSQL := strSQL + 'WHERE capackage = ''' + ccaid + ''' ';
+  end;
+ strSQL := strSQL + ' ORDER by CACHANNEL';
+ RecSet(strSQL);
+ i:=1;
+ while not dm.DDL.Eof do
+  begin
+    { frmCA.ngCA.AddCells([inttostr(i),
+                        dm.DDL.FieldValues['CACHANNEL'],
+                        dm.DDL.FieldValues['CAPACKAGE'],
+                        dm.DDL.FieldValues['CACHANNEL'],
+                        dm.DDL.FieldValues['CAPACKAGE']
+                        ]);     }
+     frmCA.ngCA.Cell[0, i-1].AsString := inttostr(i);
+     frmCA.ngCA.Cell[1, i-1].AsString := dm.DDL.FieldValues['CACHANNEL'];
+     frmCA.ngCA.Cell[2, i-1].AsString := dm.DDL.FieldValues['CAPACKAGE'];
+     frmCA.ngCA.Cell[4, i-1].AsString := dm.DDL.FieldValues['CACHANNEL'];
+     frmCA.ngCA.Cell[5, i-1].AsString := dm.DDL.FieldValues['CAPACKAGE'];
+     frmCA.ngCA.Cell[3, i-1].AsString := dm.DDL.FieldValues['CCADESCRIPTION'];
+     i:=i+1;
+     dm.DDL.Next;
+  end;
+ frmCA.ngCA.EndUpdate;
+ if frmCA.txtsearch.Text <> '' then
+ begin
+    frmca.AddRow1.Visible := false;
+    frmca.save1.enabled := false;
+    frmca.addnew1.Visible := true;
+ end
+ else
+ begin
+    frmca.AddRow1.Visible := false;
+    frmca.save1.enabled := false;
+    frmca.addnew1.Visible := true;
+ end
+end;
+
+procedure prcShow(channel:string);
+var
+ i, ii : integer;
+begin
+ frmCA.ngCA.ClearRows;
+ strSQL := 'SELECT COUNT(CAID) as jumlahbaris from m_ca_package ';
+ if frmCA.cbChannel.Text <> 'All Channels' then
+ begin
+ strSQL := strSQL + 'where cachannel = ''' + frmCA.cbChannel.text + '''';
+ end;
+ RecSet(strSQL);
+ ii:=dm.DDL.FieldValues['jumlahbaris'];
+ frmCA.ngCA.AddRow(ii);
+ frmCA.ngCA.BeginUpdate;
+// strSQL := ' SELECT CACHANNEL, capackage from m_ca_package  ';
+ strSQL := 'SELECT CACHANNEL, capackage, ccadescription from m_ca_package a JOIN m_caserviceid b on A.CAPACKAGE = B.CCAID ';
+ if frmCA.cbChannel.Text <> trim('All Channels') then
+  begin
+   strSQL := strSQL + 'WHERE CACHANNEL = ''' + channel + ''' ';
+  end;
+ strSQL := strSQL + ' ORDER by CACHANNEL';
+ RecSet(strSQL);
+ i:=1;
+ if frmCA.cbChannel.Text <> trim('All Channels') then
+  begin
+    frmca.Panel3.Visible := false;
+    frmca.ScrollBox1.Height := 153;
+    frmca.ScrollBox2.Height := 497;
+    frmca.addnew1.Visible := true;
+    frmca.save1.enabled := true;
+    frmca.Addrow1.Visible :=true;
+  end
+ else
+  begin
+    frmca.Panel3.Visible := true;
+    frmca.ScrollBox1.Height := 185;
+    frmca.ScrollBox2.Height := 465;
+    frmca.Addrow1.Visible :=false;
+    frmca.save1.enabled := false;
+  end;
+ while not dm.DDL.Eof do
+  begin
+    { frmCA.ngCA.AddCells([inttostr(i),
+                        dm.DDL.FieldValues['CACHANNEL'],
+                        dm.DDL.FieldValues['CAPACKAGE'],
+                        dm.DDL.FieldValues['CACHANNEL'],
+                        dm.DDL.FieldValues['CAPACKAGE']
+                        ]);     }
+     frmCA.ngCA.Cell[0, i-1].AsString := inttostr(i);
+     frmCA.ngCA.Cell[1, i-1].AsString := dm.DDL.FieldValues['CACHANNEL'];
+     frmCA.ngCA.Cell[2, i-1].AsString := dm.DDL.FieldValues['CAPACKAGE'];
+     frmCA.ngCA.Cell[4, i-1].AsString := dm.DDL.FieldValues['CACHANNEL'];
+     frmCA.ngCA.Cell[5, i-1].AsString := dm.DDL.FieldValues['CAPACKAGE'];
+     frmCA.ngCA.Cell[3, i-1].AsString := dm.DDL.FieldValues['CCADESCRIPTION'];
+     i:=i+1;
+     dm.DDL.Next;
+  end;
+ frmCA.ngCA.EndUpdate;
+end;
+
+procedure TfrmCA.FormShow(Sender: TObject);
+var
+ item, ngCHNitem, ngCAitem : TStrings;
+begin
+ cbChannel.Clear;
+ ngCA.ClearRows;
+ SetCueBanner(txtSearch, 'Input CA Package Here, then press enter');
+ strSQL := 'SELECT distinct MCHANNEL FROM M_CHANNEL ORDER BY MCHANNEL';
+ RecSet(strSQL);
+
+ Item:=cbChannel.Items.Create;
+ ngCHNitem:=NxComboBoxColumn1.Items.Create;
+ item.Add('All Channels');
+ while not dm.DDL.Eof do
+ begin
+  item.Add(dm.DDL.FieldValues['MCHANNEL']);
+  ngCHNitem.Add(dm.DDL.FieldValues['MCHANNEL']);
+  dm.DDL.Next;
+ end;
+ cbChannel.ItemIndex:=0;
+
+ strSQL := ' SELECT CCAID FROM M_CASERVICEID ORDER BY CCAID ';
+ RecSet(strSQL);
+
+ ngCAitem:=NxComboBoxColumn2.Items.Create;
+ while not dm.DDL.Eof do
+ begin
+  ngCAitem.Add(dm.DDL.FieldValues['CCAID']);
+  dm.DDL.Next;
+ end;
+
+
+
+{ frmCA.NxComboBoxColumn1.Items.Clear;
+ strSQL := 'SELECT ccaid from m_caserviceid order by ccaid ';
+ RecSet(strSQL);
+ item:=NxComboBoxColumn1.Items.Create;
+ while not dm.DDL.Eof do
+  begin
+   item.Add(dm.DDL.FieldValues['ccaid']);
+   dm.DDL.Next
+  end;
+ NxComboBoxColumn1.Index:=0; }
+ prcShow(txtSearch.Text)
+end;
+
+procedure TfrmCA.ngCAMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+   if Button = mbRight Then
+    Begin
+      ppmCAPkg.Popup(Mouse.CursorPos.X,Mouse.CursorPos.Y);
+    End;
+end;
+
+procedure TfrmCA.AddRow1Click(Sender: TObject);
+begin
+ ngCA.AddRow(1);
+end;
+
+procedure TfrmCA.Save1Click(Sender: TObject);
+var
+ i : integer;
+ angka : string;
+ // synEng, synInd,epgReplace : String;
+begin
+ if strUserACC = 'Admin' then
+  begin
+   for i := 0 to ngCA.RowCount-1 do
+   begin
+    angka:=fncangka;
+    strSQL := 'SELECT cachannel, capackage FROM M_CA_PACKAGE ';
+    strSQL := strSQL + 'WHERE cachannel = ''' + ngCA.Cells[4,i] + ''' ';
+    strSQL := strSQL + 'AND capackage = ''' + ngCA.Cells[5,i] + ''' ';
+    RecSet(strSQL);
+
+    if dm.DDL.Eof then
+    begin
+     strSQL := 'INSERT INTO SGI.M_CA_PACKAGE ( ';
+     strSQL := strSQL + 'CAID, cachannel, capackage) ';
+     strSQL := strSQL + 'VALUES ( ';
+     strSQL := strSQL + '''' + angka + ''', ';
+     if frmCA.cbChannel.Text='All Channels' then
+     begin
+      strSQL := strSQL + '''' + ngCA.Cells[1,i] + ''', ';
+     end
+     else
+     begin
+      strSQL := strSQL + '''' + trim(cbChannel.Text) + ''', ';
+     end;
+     strSQL := strSQL + '''' + ngCA.Cells[2,i] +  ''') ';
+     RecExc(strSQL);
+    end
+   else
+    begin
+     strSQL := ' UPDATE M_CA_PACKAGE SET cachannel = ''' + ngCA.Cells[1,i] + ''', capackage = ''' + ngCA.Cells[2,i] + ''' ';
+     strSQL := strSQL + ' WHERE cachannel = ''' + ngCA.Cells[4,i] + ''' ';
+     strSQL := strSQL + 'AND capackage = ''' + ngCA.Cells[5,i] + ''' ';
+     RecExc(strSQL);
+    end;
+
+   end;
+   ngCA.ClearRows;
+   prcShow(cbChannel.Text);
+   ShowMessage('Data Has Been Saved!');
+  end
+ else
+  begin
+   ShowMessage('You Are Not Authorized');
+  end;
+end;
+
+procedure TfrmCA.AddNew1Click(Sender: TObject);
+begin
+ ngCA.ClearRows;
+end;
+
+procedure TfrmCA.Exit1Click(Sender: TObject);
+begin
+ Close;
+end;
+
+procedure TfrmCA.cbChannelSelect(Sender: TObject);
+begin
+ Screen.Cursor:=crHourGlass;
+ ngCA.ClearRows;
+ prcShow(cbChannel.Text);
+ Screen.Cursor:=crDefault;
+end;
+
+procedure TfrmCA.Button1Click(Sender: TObject);
+begin
+ frmCA.Close;
+end;
+
+procedure TfrmCA.ngCASelectCell(Sender: TObject; ACol, ARow: Integer);
+begin
+ x:= ACol;
+ y:= ARow;
+end;
+
+procedure TfrmCA.Delete1Click(Sender: TObject);
+var
+  strCaDel, strCaChDel : String;
+begin
+ strCaDel := ngCA.Cells[2,y];
+ strCaChDel := ngCA.Cells[1,y];
+ if strUserACC = 'Admin' then
+  begin
+   strSQL := 'DELETE FROM M_CA_PACKAGE WHERE CACHANNEL = ''' + ngCA.Cells[1,y] + ''' AND CAPACKAGE = ''' + ngCA.Cells[2,y] + ''' ';
+   RecExc(strSQL);
+   ShowMessage(strCaDel+' Has Been Removed from '+UpperCase(strCaChDel));
+   prcShow(cbChannel.Text);
+  end
+ else
+  begin
+   ShowMessage('You Are Not Authorized');
+  end;
+end;
+
+procedure TfrmCA.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+ frmCA.Close;
+end;
+
+procedure TfrmCA.Exit2Click(Sender: TObject);
+begin
+ Close;
+end;
+
+procedure TfrmCA.Delete2Click(Sender: TObject);
+var
+  strCaDel, strCaChDel : String;
+begin
+ strCaDel := ngCA.Cells[2,y];
+ strCaChDel := ngCA.Cells[1,y];
+ if strUserACC = 'Admin' then
+  begin
+   strSQL := 'DELETE FROM M_CA_PACKAGE WHERE CACHANNEL = ''' + ngCA.Cells[1,y] + ''' AND CAPACKAGE = ''' + ngCA.Cells[2,y] + ''' ';
+   RecExc(strSQL);
+   ShowMessage(strCaDel+' Has Been Removed from '+UpperCase(strCaChDel));
+   prcShow(cbChannel.Text);
+  end
+ else
+  begin
+   ShowMessage('You Are Not Authorized');
+  end;
+end;
+
+procedure TfrmCA.Update1Click(Sender: TObject);
+var
+ i : integer;
+ epgReplace, synEng, synInd, angka : string;
+begin
+ if strUserACC = 'Admin' then
+  begin
+   for i := 0 to ngCA.RowCount-1 do
+   begin
+    angka:=fncangka;
+    strSQL := 'SELECT cachannel, capackage FROM M_CA_PACKAGE ';
+    strSQL := strSQL + 'WHERE cachannel = ''' + ngCA.Cells[4,i] + ''' ';
+    strSQL := strSQL + 'AND capackage = ''' + ngCA.Cells[5,i] + ''' ';
+    RecSet(strSQL);
+
+    if dm.DDL.Eof then
+    begin
+     strSQL := 'INSERT INTO SGI.M_CA_PACKAGE ( ';
+     strSQL := strSQL + 'CAID, cachannel, capackage) ';
+     strSQL := strSQL + 'VALUES ( ';
+     strSQL := strSQL + '''' + angka + ''', ';
+     if frmCA.cbChannel.Text='All Channels' then
+     begin
+      strSQL := strSQL + '''' + ngCA.Cells[1,i] + ''', ';
+     end
+     else
+     begin
+      strSQL := strSQL + '''' + trim(cbChannel.Text) + ''', ';
+     end;
+     strSQL := strSQL + '''' + ngCA.Cells[2,i] +  ''') ';
+     RecExc(strSQL);
+    end
+   else
+    begin
+     strSQL := ' UPDATE M_CA_PACKAGE SET cachannel = ''' + ngCA.Cells[1,i] + ''', capackage = ''' + ngCA.Cells[2,i] + ''' ';
+     strSQL := strSQL + ' WHERE cachannel = ''' + ngCA.Cells[4,i] + ''' ';
+     strSQL := strSQL + 'AND capackage = ''' + ngCA.Cells[5,i] + ''' ';
+     RecExc(strSQL);
+    end;
+
+   end;
+   ngCA.ClearRows;
+   prcShow(cbChannel.Text);
+   ShowMessage('Data Has Been Saved!');
+  end
+ else
+  begin
+   ShowMessage('You Are Not Authorized');
+  end;
+end;
+
+procedure TfrmCA.AddRow2Click(Sender: TObject);
+begin
+ ngCA.AddRow(1);
+end;
+
+procedure TfrmCA.AddNew2Click(Sender: TObject);
+begin
+ ngCA.ClearRows;
+end;
+
+procedure TfrmCA.Button2Click(Sender: TObject);
+begin
+    Screen.Cursor:=crHourGlass;
+    frmCA.ngCA.ClearRows;
+    if trim(txtSearch.text)<>'' then
+    begin
+      prcSearch(txtSearch.Text);
+    end
+    else prcShow(txtSearch.Text);
+    Screen.Cursor:=crDefault;
+end;
+
+procedure TfrmCA.txtSearchKeyPress(Sender: TObject;
+  var Key: Char);
+begin
+if key=#13 then
+  begin
+    Screen.Cursor:=crHourGlass;
+    frmCA.ngCA.ClearRows;
+    if trim(txtSearch.text)<>'' then
+    begin
+      prcSearch(txtSearch.Text);
+    end
+    else prcShow(txtSearch.Text);
+    Screen.Cursor:=crDefault;
+  end;
+end;
+
+end.
+
+
+

@@ -1,0 +1,322 @@
+unit frm_Channel;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, jpeg, ExtCtrls, NxScrollControl, NxCustomGridControl,
+  NxCustomGrid, NxGrid, NxColumns, NxColumnClasses, Menus, StdCtrls;
+
+type
+  TfrmChannel = class(TForm)
+    PopupMenu1: TPopupMenu;
+    AddRow1: TMenuItem;                                                                                                              
+    AddNew1: TMenuItem;
+    Update1: TMenuItem;
+    Exit1: TMenuItem;
+    ScrollBox1: TScrollBox;
+    ScrollBox2: TScrollBox;
+    ngChannel: TNextGrid;
+    NxTextColumn1: TNxTextColumn;
+    NxTextColumn2: TNxTextColumn;
+    NxTextColumn5: TNxTextColumn;
+    NxComboBoxColumn1: TNxComboBoxColumn;
+    NxTextColumn7: TNxTextColumn;
+    NxTextColumn8: TNxTextColumn;
+    NxTextColumn9: TNxTextColumn;
+    NxTextColumn10: TNxTextColumn;
+    NxTextColumn11: TNxTextColumn;
+    NxTextColumn13: TNxTextColumn;
+    NxTextColumn4: TNxTextColumn;
+    NxTextColumn3: TNxTextColumn;
+    NxComboBoxColumn2: TNxComboBoxColumn;
+    NxComboBoxColumn3: TNxComboBoxColumn;
+    Delete1: TMenuItem;
+    NxTextColumn6: TNxTextColumn;
+    Panel1: TPanel;
+    cbCATemplate: TComboBox;
+    Label2: TLabel;
+    Label1: TLabel;
+    cbChannel: TComboBox;
+    Button1: TButton;
+    Panel2: TPanel;
+    Image1: TImage;
+    procedure FormShow(Sender: TObject);
+    procedure cbChannelSelect(Sender: TObject);
+    procedure AddRow1Click(Sender: TObject);
+    procedure AddNew1Click(Sender: TObject);
+    procedure Exit1Click(Sender: TObject);
+    procedure Update1Click(Sender: TObject);
+    procedure ngChannelMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure Button1Click(Sender: TObject);
+    procedure ngChannelSelectCell(Sender: TObject; ACol, ARow: Integer);
+    procedure Delete1Click(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  frmChannel: TfrmChannel;
+  X, Y :integer;
+
+implementation
+
+uses frm_dm, frm_Login, Types;
+
+{$R *.dfm}
+
+function fncangka():string;
+var
+ strAngka : integer;
+begin
+ strSQL := 'SELECT MCID FROM M_CHANNEL ORDER BY MCID ';
+ RecSet(strSQL);
+
+ if dm.DDL.Eof then
+  begin
+   strAngka := 1;
+  end
+ else
+  begin
+   dm.ddl.Last;
+   strAngka := dm.DDL.FieldValues['MCID'] + 1;
+  end;
+ fncangka:=IntToStr(strAngka);
+end;
+
+procedure prcShow(channel:string);
+
+var
+ i:integer;
+
+function IfNull( const Value, Default : OleVariant ) : OleVariant;
+begin
+  if Value = NULL then
+    Result := Default
+  else
+    Result := Value;
+end;
+
+begin
+ strSQL := 'SELECT * FROM M_CHANNEL, m_catemplate where mcsiserviceid = catcode';
+ if frmChannel.cbChannel.Text <> trim('All Channel') then
+  begin
+   strSQL := strSQL + ' AND MCHANNEL = ''' + channel + ''' ';
+  end;
+
+ strSQL := strSQL + ' ORDER BY MCHANNEL';
+ RecSet(strSQL);
+ i:=1;
+ frmChannel.ngChannel.ClearRows;
+ while not dm.DDL.Eof do
+ begin
+  frmChannel.ngChannel.AddCells([inttostr(i),
+                                dm.DDL.FieldValues['MCHANNEL'],
+                                dm.DDL.FieldValues['MCHANNEL_DESCRIPTION'],
+                                dm.DDL.FieldValues['CATdescription'],
+                                dm.DDL.FieldValues['MSGINAME'],
+                                dm.DDL.FieldValues['MUSERNIBBLE1'],
+                                dm.DDL.FieldValues['MSYNOPSIS_STATUS'],
+                                dm.DDL.FieldValues['MCHANNEL'],
+                                dm.DDL.FieldValues['MCHANNEL_DESCRIPTION'],
+                                dm.DDL.FieldValues['CATdescription'],
+                                dm.DDL.FieldValues['MSGINAME'],
+                                dm.DDL.FieldValues['MUSERNIBBLE1'],
+                                dm.DDL.FieldValues['MSYNOPSIS_STATUS'],
+                                IfNull(dm.DDL.FieldValues['MPLAYOUT_SOURCE'],''),
+                                IfNull(dm.DDL.FieldValues['MCHANNEL_NUMBER'],0)
+                                  ]);
+   i:=i+1;
+   dm.DDL.Next;
+ end;
+end;
+
+procedure TfrmChannel.FormShow(Sender: TObject);
+var
+ i:integer;
+ item : TStrings;
+begin
+ cbChannel.Clear;
+ ngChannel.ClearRows;
+ strSQL := 'SELECT MCHANNEL FROM M_CHANNEL ORDER BY MCHANNEL';
+ RecSet(strSQL);
+
+ Item:=cbChannel.Items.Create;
+ item.Add('All Channel');
+ while not dm.DDL.Eof do
+ begin
+  item.Add(dm.DDL.FieldValues['MCHANNEL']);
+  dm.DDL.Next;
+ end;
+ cbChannel.ItemIndex:=0;
+
+ strSQL := ' SELECT catdescription from m_catemplate order by catdescription';
+ RecSet(strSQL);
+
+ item:=cbCATemplate.Items.Create;
+ item.Add('-SELECT ONE-');
+ while not dm.DDL.Eof do
+ begin
+  item.Add(dm.DDL.FieldValues['catdescription']);
+  dm.DDL.Next;
+ end;
+ cbCATemplate.ItemIndex:=0;
+
+ strSQL := ' SELECT catdescription from m_catemplate order by catdescription';
+ RecSet(strSQL);
+
+ item:=NxComboBoxColumn2.Items.Create;
+ while not dm.DDL.Eof do
+ begin
+  item.Add(dm.DDL.FieldValues['catdescription']);
+  dm.DDL.Next;
+ end;
+
+end;
+
+procedure TfrmChannel.cbChannelSelect(Sender: TObject);
+begin
+ Screen.Cursor:=crHourGlass;
+ ngChannel.ClearRows;
+ prcShow(cbChannel.Text);
+ Screen.Cursor:=crDefault;
+end;
+
+procedure TfrmChannel.AddRow1Click(Sender: TObject);
+begin
+ ngChannel.AddRow(1);
+end;
+
+procedure TfrmChannel.AddNew1Click(Sender: TObject);
+begin
+ ngChannel.ClearRows;
+ ngChannel.AddRow(1);
+end;
+
+procedure TfrmChannel.Exit1Click(Sender: TObject);
+begin
+ frmChannel.Close;
+end;
+
+procedure TfrmChannel.Update1Click(Sender: TObject);
+var
+ i:integer;
+ angka:String;
+begin
+Screen.Cursor:=crHourGlass;
+ for i := 0 to ngChannel.RowCount-1 do
+ begin
+  angka:=fncangka;
+  strSQL := 'SELECT * FROM M_CHANNEL ';
+  strSQL := strSQL + 'WHERE MCHANNEL = ''' + ngChannel.Cells[7,i] + ''' ';
+  strSQL := strSQL + 'AND MCSISERVICEID = (select catcode from m_catemplate  ';
+  strSQL := strSQL + 'where catdescription = ''' + ngChannel.Cells[9,i] + ''') ';
+  RecSet(strSQL);
+
+  if dm.DDL.Eof then
+  begin
+   strSQL := 'INSERT INTO SGI.M_CHANNEL ( ';
+   strSQL := strSQL + 'MCID, MCHANNEL, MCHANNEL_DESCRIPTION, MCSISERVICEID, ';
+   strSQL := strSQL + 'MSGINAME, MUSERNIBBLE1, MUSER_CREATE, MUSER_CREATEDATE, ';
+   strSQL := strSQL + 'MUSER_UPDATE, MUSER_UPDATEDATE, MSYNOPSIS_STATUS, MCHANNEL_NUMBER, MPLAYOUT_SOURCE ) ';
+   strSQL := strSQL + 'VALUES ( ';
+   strSQL := strSQL + '''' + angka + ''', ';
+   strSQL := strSQL + '''' + ngChannel.Cells[1,i] + ''', ';
+   strSQL := strSQL + '''' + ngChannel.Cells[2,i] + ''', ';
+   strSQL := strSQL + '(select catcode from m_catemplate ';
+   strSQL := strSQL + 'where catdescription =''' + ngChannel.Cells[3,i] + '''), ';
+   strSQL := strSQL + '''' + ngChannel.Cells[4,i] + ''', ';
+   strSQL := strSQL + '''' + ngChannel.Cells[5,i] + ''', ';
+   strSQL := strSQL + '''' + strUser +  ''', ';
+   strSQL := strSQL + 'sysdate, ';
+   strSQL := strSQL + '''' + strUser +  ''', ';
+   strSQL := strSQL + 'sysdate, ';
+   strSQL := strSQL + '''' + ngChannel.Cells[6,i] + ''', ';
+   strSQL := strSQL + '''' + ngChannel.Cells[14,i] + ''', ';
+   strSQL := strSQL + '''' + ngChannel.Cells[13,i] + ''' ) ';
+   RecExc(strSQL);
+  end
+  else
+  begin
+   strSQL := ' UPDATE M_CHANNEL SET MCHANNEL = ''' + ngChannel.Cells[1,i] + ''', MCHANNEL_DESCRIPTION = ''' + ngChannel.Cells[2,i] + ''', ';
+   strSQL := strSQL + ' MCHANNEL_NUMBER = ''' + ngChannel.Cells[14,i] + ''', ';
+   strSQL := strSQL + ' MPLAYOUT_SOURCE = ''' + ngChannel.Cells[13,i] + ''', ';
+   strSQL := strSQL + ' MCSISERVICEID = (select catcode from m_catemplate ';
+   strSQL := strSQL + 'where catdescription = ''' + ngChannel.Cells[3,i] + '''), ';
+   strSQL := strSQL + ' MSGINAME = ''' + ngChannel.Cells[4,i] + ''', ';
+   strSQL := strSQL + ' MUSERNIBBLE1 = ''' + ngChannel.Cells[5,i] + ''', ';
+   strSQL := strSQL + ' MUSER_UPDATE = ''' + strUser + ''', ';
+   strSQL := strSQL + ' MUSER_UPDATEDATE = sysdate, ';
+   strSQL := strSQL + 'MSYNOPSIS_STATUS = ''' + ngChannel.Cells[6,i] + ''' ';
+   strSQL := strSQL + ' WHERE MCHANNEL = ''' + ngChannel.Cells[7,i] + ''' ';
+   strSQL := strSQL + 'AND MCSISERVICEID = (select catcode from m_catemplate ';
+   strSQL := strSQL + 'where catdescription = ''' + ngChannel.Cells[9,i] + ''') ';
+   RecExc(strSQL);
+  end;
+
+  strSQL := 'SELECT * FROM M_READXL ';
+  strSQL := strSQL + 'WHERE RCHANNEL = ''' + ngChannel.Cells[7,i] + ''' ';
+  RecSet(strSQL);
+  if not dm.DDL.Eof then
+  begin
+   strSQL := ' UPDATE M_READXL SET RCHANNEL = ''' + ngChannel.Cells[1,i] + ''' ';
+   strSQL := strSQL + ' WHERE RCHANNEL = ''' + ngChannel.Cells[7,i] + ''' ';
+   RecExc(strSQL);
+  end;
+
+  strSQL := 'SELECT * FROM M_CA_PACKAGE ';
+  strSQL := strSQL + 'WHERE CACHANNEL = ''' + ngChannel.Cells[7,i] + ''' ';
+  RecSet(strSQL);
+  if not dm.DDL.Eof then
+  begin
+   strSQL := ' UPDATE M_CA_PACKAGE SET CACHANNEL = ''' + ngChannel.Cells[1,i] + ''' ';
+   strSQL := strSQL + ' WHERE CACHANNEL = ''' + ngChannel.Cells[7,i] + ''' ';
+   RecExc(strSQL);
+  end;
+
+ end;
+ ngChannel.ClearRows;
+ FormShow(Sender);
+ prcShow(cbChannel.Text);
+ Screen.Cursor:=crDefault;
+ ShowMessage('Data Has Been Saved!');
+end;
+
+procedure TfrmChannel.ngChannelMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+   if Button = mbRight Then
+    Begin
+      PopupMenu1.Popup(Mouse.CursorPos.X,Mouse.CursorPos.Y);
+    End;
+end;
+
+procedure TfrmChannel.Button1Click(Sender: TObject);
+begin
+ frmChannel.Close;
+end;
+
+procedure TfrmChannel.ngChannelSelectCell(Sender: TObject; ACol,
+  ARow: Integer);
+begin
+  X := ACol;
+  Y := ARow;
+end;
+
+procedure TfrmChannel.Delete1Click(Sender: TObject);
+Var
+  strDelete : String;
+begin
+   strDelete := ngChannel.Cells[1,y];
+   strSQL := 'DELETE FROM M_CHANNEL WHERE MCHANNEL = ''' + ngChannel.Cells[1,y] + '''  ';
+   RecExc(strSQL);
+   strSQL := 'DELETE FROM M_CA_PACKAGE WHERE CACHANNEL = ''' + ngChannel.Cells[1,y] + '''  ';
+   RecExc(strSQL);
+   prcShow(cbChannel.Text);
+   ShowMessage('CHANNEL '+strDelete+' Has Been Removed');
+end;
+
+end.

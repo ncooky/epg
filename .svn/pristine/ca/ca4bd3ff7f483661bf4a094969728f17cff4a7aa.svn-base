@@ -1,0 +1,111 @@
+unit frm_Login;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls, jpeg, ExtCtrls, XPMan, ToolWin, ActnMan, ActnCtrls,
+  ActnColorMaps, ComCtrls, OleCtrls, DCPcrypt2, DCPmd5;
+
+
+type
+  TfrmLogin = class(TForm)
+    edtUsrName: TEdit;
+    edtUsrPass: TEdit;
+    btnLogin: TButton;
+    Button2: TButton;
+    XPManifest1: TXPManifest;
+    Image1: TImage;
+    Label1: TLabel;
+    procedure btnLoginClick(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
+    procedure FormKeyPress(Sender: TObject; var Key: Char);
+    procedure FormShow(Sender: TObject);
+
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  frmLogin: TfrmLogin;
+  strUser, strUserACC : String;
+  Hash: TDCP_md5;
+
+implementation
+
+uses frm_dm, frm_Read;
+
+{$R *.dfm}
+function  GetAppVersion:string;
+   var
+    Size, Size2: DWord;
+    Pt, Pt2: Pointer;
+   begin
+     Size := GetFileVersionInfoSize(PChar (ParamStr (0)), Size2);
+     if Size > 0 then
+     begin
+       GetMem (Pt, Size);
+       try
+          GetFileVersionInfo (PChar (ParamStr (0)), 0, Size, Pt);
+          VerQueryValue (Pt, '\', Pt2, Size2);
+          with TVSFixedFileInfo (Pt2^) do
+          begin
+            Result:= ' Version '+
+                     IntToStr (HiWord (dwFileVersionMS)) + '.' +
+                     IntToStr (LoWord (dwFileVersionMS)) + '.' +
+                     IntToStr (HiWord (dwFileVersionLS)) + '.' +
+                     IntToStr (LoWord (dwFileVersionLS)) + ' @End of 2015';
+         end;
+       finally
+         FreeMem (Pt);
+       end;
+     end;
+   end;
+   
+procedure TfrmLogin.btnLoginClick(Sender: TObject);
+var strPass : String;
+begin
+ strPass := fncMD5(edtUsrPass.Text);
+ strSQL := 'SELECT * FROM M_USER WHERE UUSR_NAME = ''' + edtUsrName.Text + ''' and UUSR_PASSWORD = ''' + strPass + ''' ';
+ RecSet(strSQL);
+
+ if dm.DDL.Eof then
+  begin
+   ShowMessage('Wrong User Name And Password!!!');
+   edtUsrName.Text:='';
+   edtUsrPass.Text:='';
+   edtUsrName.SetFocus;
+  end
+ else
+  begin
+   frmRead.Show;
+   strUser:='';
+   strUser:=edtUsrName.Text;
+   strUserACC:= dm.DDL.FieldValues['UUSR_ACC'];
+   edtUsrName.Text:='';
+   edtUsrPass.Text:='';
+   frmLogin.Hide;
+  end;
+end;
+
+procedure TfrmLogin.Button2Click(Sender: TObject);
+begin
+ Application.Terminate;
+end;
+
+procedure TfrmLogin.FormKeyPress(Sender: TObject; var Key: Char);
+begin
+  if key=#13 then
+  begin
+    btnLoginClick(Sender);
+  end;
+end;
+
+procedure TfrmLogin.FormShow(Sender: TObject);
+begin
+Label1.Caption := GetAppVersion;
+end;
+
+end.

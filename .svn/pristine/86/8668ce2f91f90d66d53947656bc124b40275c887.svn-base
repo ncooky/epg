@@ -1,0 +1,90 @@
+- Groupkey : 12346 = OPPV
+             12345 = sub
+             non   = Linear
+
+johana 162718
+
+
+select * from m_readxl where rchannel = 'Fox Channel' and rscheduledate like to_date('10/31/2014', 'mm/dd/yyyy')
+
+strSQL := 'INSERT INTO SGI.M_READXL ( ';
+                strSQL := strSQL + 'RID, RCHANNEL, RSCHEDULEDATE, RSCHEDULEDATEGMT, ';
+                strSQL := strSQL + 'REPG_TITLE, RDURATION, RRATING, ';
+                strSQL := strSQL + 'RGENRE, RSUBGENRE, RCONTENT, RCATEMPLATE, RUSER_INSERT, REPG_TITLE_ORI, RDATE_CREATE) ';
+                strSQL := strSQL + 'VALUES ( ';
+                strSQL := strSQL + '''' + inttostr(angka) + ''', ';
+                strSQL := strSQL + '''' + StringGrid1.Cells[3,i] + ''', ';
+                strSQL := strSQL + 'TO_Date(''' + DateString + ''',''mm/dd/yyyy hh24:mi:ss''), ';
+                strSQL := strSQL + 'TO_Date(''' + DateString + ''',''mm/dd/yyyy hh24:mi:ss'')-0.29167, ';
+                ReplaceString:=Replace(StringGrid1.Cells[2,i], '''', '`');
+                ReplaceString:=Replace(ReplaceString, '`', '''''');
+                strSQL := strSQL + '''' + ReplaceString + ''', ';
+                DateString:=valstrtodatetime(DateFloat1, StringGrid1.Cells[4,i]);
+                strSQL := strSQL + '''' + copy(DateString, 12, 2) + copy(DateString, 15, 2) + copy(DateString, 18, 2) + ''', ';
+                if StringGrid1.Cells[7,i]='0' then rating := 0
+                else if StringGrid1.Cells[7,i]='7' then rating := 2
+                else if StringGrid1.Cells[7,i]='8' then rating := 4
+                else if StringGrid1.Cells[7,i]='9' then rating := 6
+                else if StringGrid1.Cells[7,i]='10' then rating := 8
+                else if StringGrid1.Cells[7,i]='11' then rating := 10
+                else if StringGrid1.Cells[7,i]='12' then rating := 12
+                else if StringGrid1.Cells[7,i]='13' then rating := 15;
+                strSQL := strSQL + '''' + IntToStr(rating) + ''', ';
+                strSQL := strSQL + '''' + copy(StringGrid1.Cells[8,i],1,2) + ''', ';
+                strSQL := strSQL + '''' + copy(StringGrid1.Cells[8,i],3,2) + ''', ';
+                strSQL := strSQL + '''' + StringGrid1.Cells[9,i] + ''', ';
+                strSQL := strSQL + '''' + StringGrid1.Cells[10,i] + ''', ';
+                strSQL := strSQL + '''' + strUser + ''', ';
+                ReplaceString:=Replace(StringGrid1.Cells[1,i], '''', '');
+                strSQL := strSQL + 'upper(''' + trim(ReplaceString) + '''), ';
+                strSQL := strSQL + 'sysdate )';
+                //strSQL := strSQL + '''' + StringGrid1.Cells[11,i] + ''', ';
+                //strSQL := strSQL + '''' + StringGrid1.Cells[12,i] + ''' )';
+                RecExc(strSQL);
+
+
+
+
+
+
+
+
+
+
+
+
+climaxdatestring:=valstrtodatetime(climaxDateFloat, StringGrid1.Cells[4,climax]);
+             awaldatestring:=valstrtodatetime(awalDateFloat, StringGrid1.Cells[4,1]);
+
+
+strSQL := 'DELETE FROM M_READXL ';
+             strSQL := strSQL + ' WHERE RCHANNEL = ''' + StringGrid1.Cells[3,1] + ''' ';
+             strSQL := strSQL + ' AND RSCHEDULEDATE >= TO_Date(''' + awaldatestring + ''',''mm/dd/yyyy hh24:mi:ss'') ';
+             strSQL := strSQL + ' AND RSCHEDULEDATE <= TO_Date(''' + climaxdatestring + ''',''mm/dd/yyyy hh24:mi:ss'') ';
+             strSQL := strSQL + ' AND RSCHEDULEDATEGMT >= TO_Date(''' + awaldatestring + ''',''mm/dd/yyyy hh24:mi:ss'')-0.29167 ';
+             strSQL := strSQL + ' AND RSCHEDULEDATEGMT <= TO_Date(''' + climaxdatestring + ''',''mm/dd/yyyy hh24:mi:ss'')-0.29167 ';
+             RecExc2(strSQL);
+
+
+
+
+strSQL := 'DELETE FROM M_READXL ';
+             strSQL := strSQL + ' WHERE RCHANNEL = ''' + StringGrid1.Cells[3,1] + ''' ';
+             strSQL := strSQL + ' AND RSCHEDULEDATE >= TO_Date(''' + awaldatestring + ' 00:00:00'',''mm/dd/yyyy hh24:mi:ss'') ';
+             strSQL := strSQL + ' AND RSCHEDULEDATE <= TO_Date(''' + climaxdatestring + ' 23:59:59'',''mm/dd/yyyy hh24:mi:ss'') ';
+             strSQL := strSQL + ' AND RSCHEDULEDATEGMT >= TO_Date(''' + awaldatestring + ' 00:00:00'',''mm/dd/yyyy hh24:mi:ss'')-0.29167 ';
+             strSQL := strSQL + ' AND RSCHEDULEDATEGMT <= TO_Date(''' + climaxdatestring + ' 23:59:59'',''mm/dd/yyyy hh24:mi:ss'')-0.29167 ';
+             RecExc2(strSQL);
+
+senin 3-7mlm no vc yg sama digunakan blikpapan, jogja, ceribon.
+
+
+
+
+
+
+
+
+
+
+    

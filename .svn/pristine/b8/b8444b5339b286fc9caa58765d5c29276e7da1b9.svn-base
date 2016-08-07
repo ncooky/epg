@@ -1,0 +1,23 @@
+; -- Example1.iss --
+; Demonstrates copying 3 files and creating an icon.
+
+; SEE THE DOCUMENTATION FOR DETAILS ON CREATING .ISS SCRIPT FILES!
+
+[Setup]
+AppName=Excel to SGI Converter
+AppVersion=6
+DefaultDirName={pf}\EPG
+DefaultGroupName=EPG
+UninstallDisplayIcon={app}\EPG.exe
+Compression=lzma2
+SolidCompression=yes
+;OutputDir=userdocs:Inno Setup Examples Output
+
+[Files]
+Source: "EPG.exe"; DestDir: "{app}"
+;Source: "MyProg.chm"; DestDir: "{app}"
+;Source: "Readme.txt"; DestDir: "{app}"; Flags: isreadme
+
+[Icons]
+Name: "{group}\EPG"; Filename: "{app}\EPG.exe"
+Name: "{commondesktop}\Excel to SGI Converter"; Filename: "{app}\EPG.exe"

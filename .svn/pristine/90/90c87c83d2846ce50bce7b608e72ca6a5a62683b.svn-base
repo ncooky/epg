@@ -1,0 +1,91 @@
+unit frm_maintaindb;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls;
+
+type
+  TMaintainBox = class(TForm)
+    Label1: TLabel;
+    edtYear1: TEdit;
+    Button1: TButton;
+    edtYear: TComboBox;
+    procedure Button1Click(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  MaintainBox: TMaintainBox;
+
+implementation
+
+{$R *.dfm}
+
+uses frm_dm, frm_Login;
+
+function strToWord(p:pAnsiChar;n:byte):word;
+begin case n of
+ 1:result:=pByte(p)^-48;
+ 2:result:=((pByte(p)^-48)*10)+ pByte(p+1)^-48;
+ 3:result:=((pByte(p)^-48)*100)+((pByte(p+1)^-48)*10)+pByte(p+2)^-48;
+ 4:result:=((pByte(p)^-48)*1000)+((pByte(p+1)^-48)*100)+((pByte(p+2)^-48)*10)+pByte(p+3)^-48;
+ 5:result:=((pByte(p)^-48)*10000)+((pByte(p+1)^-48)*1000)+((pByte(p+2)^-48)*100)+((pByte(p+3)^-48)*10)+pByte(p+4)^-48;
+ else result:=0 end
+end;
+
+procedure TMaintainBox.Button1Click(Sender: TObject);
+var
+txt, txt2: string;
+item : TStrings;
+begin
+  Screen.Cursor:=crHourGlass;
+
+  txt := edtYear.text;
+  txt2 := IntToStr(SysUtils.CurrentYear);
+  if txt <> txt2 then
+    begin
+      strSQL := 'CREATE TABLE SGI.M_READXL_' + edtYear.text + ' AS SELECT * FROM SGI.M_READXL WHERE RSCHEDULEDATE BETWEEN TO_Date(''01/01/' + edtYear.text + ' 00:00:00'',''mm/dd/yyyy hh24:mi:ss'') AND TO_Date(''12/31/' + edtYear.text + ' 23:59:59'',''mm/dd/yyyy hh24:mi:ss'') ';
+      RecExc(strSQL);
+
+
+      strSQL := 'DELETE FROM SGI.M_READXL WHERE RSCHEDULEDATE BETWEEN TO_Date(''01/01/' + edtYear.text + ' 00:00:00'',''mm/dd/yyyy hh24:mi:ss'') AND TO_Date(''12/31/' + edtYear.text + ' 00:00:00'',''mm/dd/yyyy hh24:mi:ss'') ';
+      RecExc(strSQL);
+
+      Screen.Cursor:=crDefault;
+      ShowMessage('Database Maintained!');
+    end
+  else
+    begin
+     Screen.Cursor:=crDefault;
+     ShowMessage('The Year is not Valid!, please do not use current year!');
+    end;
+  {strSQL := 'select * from SGI.M_READXL_' +  + ' where RCHANNEL =''ANTV'' AND RSCHEDULEDATE BETWEEN TO_Date(''01/01/' + edtYear.text + ' 00:00:00'',''mm/dd/yyyy hh24:mi:ss'') AND TO_Date(''01/01/' + edtYear.text + ' 02:00:00'',''mm/dd/yyyy hh24:mi:ss'') ';
+  RecSet(strSQL);}
+end;
+
+procedure TMaintainBox.FormShow(Sender: TObject);
+var
+ i:integer;
+ item : TStrings;
+begin
+ Screen.Cursor:=crHourGlass;
+ strSQL := 'select distinct(extract(year from RSCHEDULEDATE)) as "YEAR" from M_READXL ORDER BY YEAR ASC';
+ RecSet(strSQL);
+
+ Item:=edtYear.Items.Create;
+ while not dm.DDL.Eof do
+ begin
+  item.Add(dm.DDL.FieldValues['YEAR']);
+  dm.DDL.Next;
+ end;
+ edtYear.ItemIndex:=0;
+ Screen.Cursor:=crDefault;
+end;
+
+end.

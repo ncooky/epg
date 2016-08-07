@@ -1,0 +1,51 @@
+unit MJDConverter;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls;
+
+type
+  TfrmMJD = class(TForm)
+    EdtYear: TEdit;
+    Label1: TLabel;
+    EdtMonth: TEdit;
+    Label2: TLabel;
+    Label3: TLabel;
+    EdtDate: TEdit;
+    EdtHour: TEdit;
+    Label4: TLabel;
+    EdtMin: TEdit;
+    Label5: TLabel;
+    EdtSec: TEdit;
+    Label6: TLabel;
+    Button1: TButton;
+    LblRes: TLabel;
+    procedure Button1Click(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  frmMJD: TfrmMJD;
+
+implementation
+
+{$R *.dfm}
+
+procedure TfrmMJD.Button1Click(Sender: TObject);
+var
+jDate: TDateTime;
+
+begin
+LblRes := '';
+LblRes := 'Result =';
+
+jdate := strtodatetime(EdtDate.Text+'/'+EdtMonth.Text+'/'+EdtYear.Text+' '+edthour.Text+':'+edtmin.Text+':'+edtmin.Text);
+LblRes:= LblRes + FloatToStr(datetimetojuliandate(jdate));
+end;
+
+end.
